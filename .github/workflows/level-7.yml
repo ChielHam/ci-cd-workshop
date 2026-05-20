@@ -1,0 +1,145 @@
+#############################################
+# Level 7 — Star Road (STUB)
+#
+# Doel (verhaal):
+#  Navigeer Star Road: een echte productie‑achtige pipeline is groot en lastig te lezen.
+#
+# Daadwerkelijk leerdoel:
+# - Alle stappen uit eerdere levels combineren in één (te) grote workflow
+# - Oefening: refactor naar leesbare, herbruikbare delen (jobs, composite actions, reusable workflows)
+# - Pas best‑practices toe: duidelijke job/step namen, conditionals, permissions, artifacts, caching
+#
+# Instructie:
+# - Deze stub is bewust log en bulky: 1 job met veel stappen en TODO’s
+# - Jouw opdracht: splits op in logische jobs en/of herbruikbare componenten
+# - Houd functionaliteit gelijkwaardig aan deze monolitische variant
+#############################################
+name: Level 7 - Star Road
+
+on:
+  workflow_dispatch: {}
+  # TODO: (optioneel) vervang/aanvul met push/pull_request triggers
+
+# TODO: (optioneel) concurrency toevoegen om dubbele runs te annuleren
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
+
+# TODO: permissions aanscherpen; voor GHCR push is packages: write nodig
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  everything-everywhere:
+    runs-on: ubuntu-latest
+
+    env:
+      # TODO: kies een image naam (GHCR voorbeeld)
+      IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+      LATEST: ghcr.io/${{ github.repository }}:latest
+      JACOCO_XML: build/reports/jacoco/test/jacocoTestReport.xml
+      COVERAGE_THRESHOLD: "0.80" # TODO: maak dit configureerbaar
+
+    steps:
+      - name: Check out code (Mario springt in de pijp)
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - name: Cache Gradle wrapper (sneller opstarten)
+        # TODO: vervang REPLACE_ME door een hashFiles() van relevante bestanden
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-REPLACE_ME
+          restore-keys: |
+            ${{ runner.os }}-gradle-wrapper-
+
+      - name: Cache Gradle caches (dependency cache)
+        # TODO: breid paden uit met daemon/native/notifications indien gewenst
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/daemon
+            ~/.gradle/native
+            ~/.gradle/notifications
+          key: ${{ runner.os }}-gradle-caches-REPLACE_ME
+          restore-keys: |
+            ${{ runner.os }}-gradle-caches-
+
+      - name: Setup Gradle (Toad levert gereedschap)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build (Level 1)
+        run: ./gradlew build --scan --no-daemon
+
+      - name: Run tests (Level 2)
+        run: ./gradlew test --stacktrace --no-daemon
+
+      - name: Upload test reports (altijd)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            build/test-results/test
+            build/reports/tests/test
+
+      - name: Generate JaCoCo report (Level 3)
+        # Let op: je moet zelf de Jacoco plugin + XML report in Gradle toevoegen
+        run: ./gradlew jacocoTestReport --no-daemon
+
+      - name: Enforce coverage threshold (PLACEHOLDER)
+        # TODO: Implementeer controle op $JACOCO_XML en faal onder $COVERAGE_THRESHOLD
+        run: |
+          echo "Coverage gate nog niet geïmplementeerd"
+          # exit 1  # verwijder deze comment als je de check hebt gebouwd
+
+      - name: Upload coverage reports (altijd)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-reports
+          path: |
+            build/reports/jacoco/test/jacocoTestReport.xml
+            build/reports/jacoco/test/html
+
+      - name: Build artifact (Level 4)
+        run: ./gradlew build --no-daemon
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: build/libs/*.jar # TODO: verifieer pad/naam
+
+      - name: Login to GHCR (alleen op main) (Level 5)
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build container image via buildpacks
+        run: ./gradlew bootBuildImage --imageName ${IMAGE}
+
+      - name: Push image (alleen op main)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker push ${IMAGE}
+          # (optioneel) publiceer ook latest tag
+          docker tag ${IMAGE} ${LATEST}
+          docker push ${LATEST}
+
+      - name: The End (samenvatting)
+        run: |
+          echo "✅ Monolitische pipeline klaar."
+          echo "🧩 Opdracht: Splits deze workflow in leesbare delen (meerdere jobs, composite action, reusable workflows)."

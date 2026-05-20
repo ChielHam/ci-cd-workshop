@@ -1,0 +1,48 @@
+name: "Setup Java + Gradle (with cache)"
+description: "Checks out code, sets up Java and Gradle, and enables Gradle wrapper/caches via actions/cache."
+
+inputs:
+  java-version:
+    description: "Java version to use"
+    required: false
+    default: '21'
+  distribution:
+    description: "JDK distribution"
+    required: false
+    default: temurin
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: ${{ inputs.distribution }}
+
+    - name: Cache Gradle wrapper
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-wrapper-
+
+    - name: Cache Gradle caches
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/daemon
+          ~/.gradle/native
+          ~/.gradle/notifications
+        key: ${{ runner.os }}-gradle-caches-${{ hashFiles('**/*.gradle*', '**/gradle/wrapper/gradle-wrapper.properties', '**/gradle/libs.versions.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-caches-
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4

@@ -1,24 +1,16 @@
 #############################################
-# Level 2 — Koopa's Fortress (STUB)
+# Level 2 — Koopa's Fortress (SOLUTION)
 #
-# Doel (verhaal):
-#  Versla de eerste Koopa‑bewakers met je test‑skills.
-#
-# Daadwerkelijk leerdoel:
-# - Tests uitvoeren in CI
-# - Zorgen dat failures de pipeline laten falen
-# - Test rapporten archiveren om te onderzoeken
+# Voert tests uit en uploadt testrapporten.
 #############################################
-name: Level 2 - Koopa's Fortress
+name: Level 2 - Koopa's Fortress (Solution)
 
 on:
   workflow_dispatch: {}
-  # TODO: maak 'm automatisch met bijv. push/pull_request
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -32,8 +24,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run tests (Fire Flower)
-        # TODO: voer tests uit; failures moeten de job laten falen
+      - name: Run tests
         run: ./gradlew test --stacktrace
 
       - name: Upload test reports (altijd)

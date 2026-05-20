@@ -1,0 +1,54 @@
+#############################################
+# Level 5 — Bowser's Castle (SOLUTION)
+#
+# Bouwt een container image met Spring Boot buildpacks en pusht alleen vanaf main.
+#############################################
+name: Level 5 - Bowser's Castle (Solution)
+
+on:
+  workflow_dispatch: {}
+  # In het echt zou je push/pull_request triggers toevoegen
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY: ghcr.io
+      IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+      LATEST: ghcr.io/${{ github.repository }}:latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Login to GHCR (alleen op main)
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build container image (Paketo)
+        run: ./gradlew bootBuildImage --imageName ${IMAGE}
+
+      - name: Push image (alleen op main)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker push ${IMAGE}
+          # Optioneel ook 'latest' tag publishen voor gemak
+          docker tag ${IMAGE} ${LATEST}
+          docker push ${LATEST}
