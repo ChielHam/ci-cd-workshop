@@ -15,7 +15,7 @@
 # - Houd functionaliteit gelijkwaardig aan deze monolitische variant
 #############################################
 name: Level 7 - Star Road
-#TODO: deze assignment moet nog worden aangepast, zodat die matcht met de solution
+
 on:
   workflow_dispatch: {}
 
@@ -24,21 +24,23 @@ on:
 #   group: ${{ github.workflow }}-${{ github.ref }}
 #   cancel-in-progress: true
 
-# TODO: permissions aanscherpen; voor GHCR push is packages: write nodig
 permissions:
   contents: read
-  packages: write
 
 jobs:
   everything-everywhere:
     runs-on: ubuntu-latest
+    # Least privilege: workflow heeft alleen contents:read; dit job voegt packages:write toe
+    permissions:
+      contents: read
+      packages: write
 
     env:
       # TODO: kies een image naam (GHCR voorbeeld)
       IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
       LATEST: ghcr.io/${{ github.repository }}:latest
       JACOCO_XML: build/reports/jacoco/test/jacocoTestReport.xml
-      COVERAGE_THRESHOLD: "0.80" # TODO: maak dit configureerbaar
+      THRESHOLD: "0.80" # TODO: maak dit configureerbaar
 
     steps:
       - name: Check out code (Mario springt in de pijp)
@@ -61,7 +63,6 @@ jobs:
             ${{ runner.os }}-gradle-wrapper-
 
       - name: Cache Gradle caches (dependency cache)
-        # TODO: breid paden uit met daemon/native/notifications indien gewenst
         uses: actions/cache@v4
         with:
           path: |
@@ -91,15 +92,10 @@ jobs:
             build/test-results/test
             build/reports/tests/test
 
-      - name: Generate JaCoCo report (Level 3)
-        # Let op: je moet zelf de Jacoco plugin + XML report in Gradle toevoegen
-        run: ./gradlew jacocoTestReport --no-daemon
-
-      - name: Enforce coverage threshold (PLACEHOLDER)
-        # TODO: Implementeer controle op $JACOCO_XML en faal onder $COVERAGE_THRESHOLD
-        run: |
-          echo "Coverage gate nog niet geïmplementeerd"
-          # exit 1  # verwijder deze comment als je de check hebt gebouwd
+      - name: Run tests + generate JaCoCo report (Level 3)
+        env:
+          JACOCO_MINIMUM_COVERAGE: "0.60"
+        run: ./gradlew test jacocoTestReport
 
       - name: Upload coverage reports (altijd)
         if: always()
@@ -127,8 +123,32 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build container image via buildpacks
-        run: ./gradlew bootBuildImage --imageName ${IMAGE}
+      # In de solution bouwen we de container met Docker i.p.v. buildpacks.
+      # In deze monolitische oefening kopiëren we de JAR naar de Docker build context
+      # en bouwen we met docker/Dockerfile.
+      - name: Prepare Docker context (copy JAR)
+        run: |
+          set -euo pipefail
+          JAR_FILE=$(ls -1 build/libs/*.jar 2>/dev/null | grep -v "-plain\.jar$" | head -n1 || true)
+          if [ -z "${JAR_FILE}" ]; then
+            # Fallback naar eender welke JAR
+            JAR_FILE=$(ls -1 build/libs/*.jar 2>/dev/null | head -n1 || true)
+          fi
+          if [ -z "${JAR_FILE}" ]; then
+            echo "[ERROR] Geen JAR gevonden in build/libs. Heb je de build stap uitgevoerd?"
+            ls -R build/libs || true
+            exit 1
+          fi
+          echo "Using JAR: ${JAR_FILE}"
+          mkdir -p docker
+          cp -f "${JAR_FILE}" docker/app.jar
+
+      - name: Build container image (Docker)
+        run: |
+          docker build \
+            -t ${IMAGE} \
+            -f docker/Dockerfile \
+            docker
 
       - name: Push image (alleen op main)
         if: github.ref == 'refs/heads/main'
