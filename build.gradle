@@ -32,10 +32,6 @@ tasks.named('test') {
     finalizedBy(tasks.jacocoTestCoverageVerification)
 }
 
-tasks.named("bootJar") {
-    enabled = true
-}
-
 jacocoTestReport {
     dependsOn tasks.test
 
