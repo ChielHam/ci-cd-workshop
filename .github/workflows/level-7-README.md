@@ -23,7 +23,7 @@ Opdracht:
 4. Verminder duplicatie. Factoriseer gedeelde setup (checkout + JDK + caching + Gradle) in een composite action in `.github/actions/...` en gebruik die in alle jobs.
    - Tip: Kijk naar `actions/checkout@v4`, `actions/setup-java@v4`, `actions/cache@v4`, `gradle/actions/setup-gradle@v4`.
    - Voorbeeldnaam: `.github/actions/setup-java-gradle` (zie oplossing).
-5. Implementeer de coverage gate (zoals in Level 3). Je mag óf het JaCoCo XML parsen, óf Gradle’s `jacocoTestCoverageVerification` gebruiken met een drempel (bijv. via env `JACOCO_MINIMUM_COVERAGE`). Upload altijd de rapporten (`if: always()`).
+5. Implementeer de coverage gate (zoals in Level 3). Je kan óf het JaCoCo XML parsen, óf Gradle’s `jacocoTestCoverageVerification` gebruiken met een drempel (bijv. via env `JACOCO_MINIMUM_COVERAGE`). Upload altijd de rapporten (`if: always()`).
 6. Houd permissies minimaal. Voor GHCR push is `packages: write` nodig. Overweeg permissies op job‑niveau alleen voor de image‑job.
 7. Zorg dat caching werkt met stabiele keys op basis van `hashFiles(...)` en dat vervolgruns cache hits laten zien.
 8. Push de image alléén op `main` (conditioneel via `if: github.ref == 'refs/heads/main'`).
@@ -47,10 +47,8 @@ Hints:
 
 Stretch goals:
 - Reusable workflows: maak `.github/workflows/reusable-*.yml` met `on: workflow_call` en roep ze aan vanuit Level 7.
-- Voeg een matrix toe (OS/Java versies) voor `build-test`.
 - Voeg environments en approvals toe voor image push (bijv. `staging`/`production`).
 - Publiceer ook een `latest` tag naast de SHA‑tag of gebruik semver tags.
-- Voeg een eenvoudige SBOM/scan stap toe (bijv. Trivy) als extra kwaliteitscontrole.
 
 Vergelijken met de oplossing:
 - Zie `.github/workflows/level-7-solution.yml` voor een concreet voorbeeld met:
