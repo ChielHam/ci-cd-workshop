@@ -3,6 +3,10 @@ name: Level 5 - Bowser's Castle
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   image:
     runs-on: ubuntu-latest
