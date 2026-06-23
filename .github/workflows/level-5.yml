@@ -38,6 +38,7 @@ jobs:
         with:
           context: .
           push: true
+          # NOTE should be ${{ github.repository_owner }} rather than "chielham"
           tags: |
-            ghcr.io/${{ github.repository_owner }}/my-app:latest
-            ghcr.io/${{ github.repository_owner }}/my-app:${{ github.sha }}
+            ghcr.io/chielham/my-app:latest
+            ghcr.io/chielham/my-app:${{ github.sha }}
