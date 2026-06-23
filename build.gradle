@@ -58,5 +58,5 @@ jacocoTestCoverageVerification {
 }
 
 jar {
-    archiveFileName = "${System.getenv('JAR_NAME') ?: 'default'}.jar"
+    archiveFileName = "${System.getenv('JAR_NAME') ?: 'app'}.jar"
 }
