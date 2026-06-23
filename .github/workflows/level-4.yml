@@ -1,7 +1,12 @@
 name: Level 4 - Toad's Treasure House
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      jar-name:
+        description: 'Jar file name'
+        required: true
+        default: 'toads-treasure-house.jar'
 
 jobs:
   artifact:
@@ -16,12 +21,14 @@ jobs:
         with:
           java-version: '21'
           distribution: temurin
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      # TODO - Build parameters toevoegen (hint: niet hier)
-
-      # TODO - Produceer een build artifact (JAR) met Gradle
-
-      # TODO - Upload het artifact met een meegegeven naam
+          cache: 'gradle'
+      - name: Build jar
+        run: ./gradlew jar
+        env:
+          JAR_NAME: ${{ inputs.jar-name }}
+      - name: Upload jar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarfile
+          path: build/libs/${{ inputs.jar-name }}
