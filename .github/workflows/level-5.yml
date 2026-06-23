@@ -36,7 +36,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: docker
           push: true
           # NOTE should be ${{ github.repository_owner }} rather than "chielham"
           tags: |
