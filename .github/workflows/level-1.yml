@@ -2,9 +2,10 @@ name: Level 1 - Yoshi's Island
 
 on:
   workflow_dispatch: {}
-  push:
-    branches:
-      - main
+  # disable, otherwise it runs for EVERY push to main
+#  push:
+#    branches:
+#      - main
 
 jobs:
   build:
