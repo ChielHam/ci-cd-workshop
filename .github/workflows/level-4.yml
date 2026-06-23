@@ -6,7 +6,7 @@ on:
       jar-name:
         description: 'Jar file name'
         required: true
-        default: 'toads-treasure-house.jar'
+        default: 'toads-treasure-house'
 
 jobs:
   artifact:
@@ -15,7 +15,6 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v6
-
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
