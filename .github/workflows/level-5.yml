@@ -17,7 +17,9 @@ jobs:
           distribution: temurin
           cache: 'gradle'
       - name: Build jar
-        run: ./gradlew jar
+        run: |
+          ./gradlew jar
+          cp build/libs/*.jar docker/
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -26,10 +28,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Docker image
         run: |
+          cd docker
           docker build \
             -t my-app:${{ github.sha }} \
             -t my-app:latest \
-            -f docker/Dockerfile \
             .
       - name: Build and push
         uses: docker/build-push-action@v6
