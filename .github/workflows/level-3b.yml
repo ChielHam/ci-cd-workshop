@@ -16,14 +16,20 @@ jobs:
         with:
           java-version: '21'
           distribution: temurin
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-        # TODO - Run de testen
-
-        # TODO - Hanteer een minimale code coverage
-
-        # TODO - Genereer een JaCoCo rapport
-        
-        # TODO - Upload het rapport voor analyse
+          cache: 'gradle'
+      - name: Run tests with Quality Gate
+        run: ./gradlew test jacocoTestCoverageVerification
+        env:
+          JACOCO_MINIMUM_COVERAGE: "0.78"
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: build/reports/tests/test/
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/reports/jacoco/test/
