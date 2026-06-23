@@ -29,7 +29,8 @@ jobs:
           docker build \
             -t my-app:${{ github.sha }} \
             -t my-app:latest \
-            docker/Dockerfile
+            -f docker/Dockerfile
+            .
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
